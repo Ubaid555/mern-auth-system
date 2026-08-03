@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { BCRYPT_SALT_ROUNDS, USER_ROLES } from "../utils/constants";
+import { BCRYPT_SALT_ROUNDS, USER_ROLES } from "../utils/constants.js";
 
 const userSchema = new mongoose.Schema(
   {
@@ -50,15 +50,13 @@ const userSchema = new mongoose.Schema(
  * Hash Password Before Saving
  * =========================================
  */
-userSchema.pre("save", async function (next) {
+userSchema.pre("save", async function () {
   // Only hash if password has changed
   if (!this.isModified("password")) {
-    return next();
+    return;
   }
 
   this.password = await bcrypt.hash(this.password, BCRYPT_SALT_ROUNDS);
-
-  next();
 });
 
 /**
