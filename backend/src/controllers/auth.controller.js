@@ -11,14 +11,12 @@ import { cookieOptions } from "../config/cookie.config.js";
 
 export const registerUser = asyncHandler(async (req, res) => {
   // Extract data from request body
-  const { fullName, email, password } = req.body;
+  const fullName = (req.body.fullName || req.body.name || "").trim();
+  const email = (req.body.email || "").trim();
+  const password = req.body.password || "";
 
   // Validate required fields
-  if (
-    [fullName, email, password].some(
-      (field) => typeof field !== "string" || field.trim() === "",
-    )
-  ) {
+  if (!fullName || !email || !password) {
     throw new ApiError(400, "All fields are required.");
   }
 
