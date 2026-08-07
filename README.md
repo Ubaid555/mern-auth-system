@@ -1,18 +1,21 @@
 # 🔐 MERN Stack Authentication System
 
-A secure, production-ready full-stack authentication system built with the **MERN** stack (MongoDB, Express, React, Node.js), featuring JWT-based authentication with **Refresh Token Rotation**, **HTTP-Only Cookies**, **Route Protection**, **Custom Form Validation**, and **Toast Notifications**.
+A production-grade, enterprise-ready full-stack authentication system built with the **MERN** stack (MongoDB, Express, React 19, Node.js). 
+
+Featuring **Dual-Instance Axios Architecture**, **Silent Token Refresh with Request Queueing**, **HTTP-Only Cookies**, **Role-Based Protected Routes**, **Global Error Boundaries**, and **Toast Notifications**.
 
 ---
 
 ## ✨ Features
 
-- **🔐 Dual Token Authentication**: Short-lived Access Tokens (15m) and long-lived Refresh Tokens (7d) stored securely in `httpOnly`, `sameSite` cookies.
-- **🔄 Refresh Token Rotation**: Implements token rotation on every refresh request to prevent replay attacks.
-- **🛡️ Protected Routes**: Client-side route guarding using custom React `ProtectedRoute` wrappers.
-- **📋 Form Validation**: Client-side validation hooks and schemas with real-time field-level error feedback.
-- **🔔 Toast Notifications**: Centralized toast notification system powered by `react-toastify`.
-- **⚡ Modern UI**: Built with React 19, Vite, and Tailwind CSS.
-- **🛑 Robust Error Handling**: Centralized error middleware with custom `ApiError` and standardized `ApiResponse` structures.
+- **🔐 Dual-Token Authentication**: Short-lived Access Tokens (15m) and long-lived Refresh Tokens (7d) stored securely in `httpOnly`, `sameSite` cookies.
+- **🔄 Dual Axios Instance Architecture**: Segregates public requests (`publicApi`) from authenticated requests (`privateApi`) to eliminate recursive interceptor loops.
+- **⚡ Concurrent Request Queueing**: Queues simultaneous 401 requests during token refresh and retries them automatically upon successful rotation.
+- **📡 Decoupled Auth Event Bus**: Broadcasts `SESSION_EXPIRED` events to React state directly from API interceptors without circular dependency issues.
+- **🛡️ Route Guarding & Layouts**: Role-based access control with `ProtectedRoute`, `PublicRoute`, and authenticated `DashboardLayout`.
+- **💥 Resilient Error Handling**: React Error Boundaries (`AppErrorBoundary` + `ErrorFallback`), centralized Express `ApiError`, and client-side `handleApiError` normalization.
+- **🔔 Toast Notification System**: Centralized UI feedback via `react-toastify`.
+- **📋 Form Validation**: Client-side validation hooks and schemas with real-time feedback.
 
 ---
 
@@ -22,14 +25,15 @@ A secure, production-ready full-stack authentication system built with the **MER
 - **React 19** & **Vite**
 - **React Router DOM v7**
 - **Tailwind CSS v4**
-- **Axios** (with credentials support)
+- **Axios** (Dual instance: Public & Private with response interceptors)
+- **react-error-boundary**
 - **React Toastify**
 
 ### Backend
 - **Node.js** & **Express.js** (ES Modules)
 - **MongoDB** & **Mongoose**
 - **JSON Web Tokens (jsonwebtoken)**
-- **bcryptjs** (Password hashing)
+- **bcryptjs** (Salted password hashing)
 - **cookie-parser** & **cors**
 
 ---
@@ -41,29 +45,29 @@ mern-auth-system/
 ├── backend/
 │   ├── src/
 │   │   ├── config/          # Database and cookie configurations
-│   │   ├── controllers/     # Authentication controllers (register, login, logout, etc.)
+│   │   ├── controllers/     # Auth controllers (register, login, logout, refresh, me)
 │   │   ├── helpers/         # User sanitization and token generation helpers
-│   │   ├── middleware/      # Auth protection, authorization, error & 404 handlers
+│   │   ├── middleware/      # Auth protection, role authorization, error & 404 handlers
 │   │   ├── models/          # Mongoose User model with password hashing & token methods
 │   │   ├── routes/          # API route definitions
 │   │   ├── utils/           # ApiError, ApiResponse, and asyncHandler utilities
-│   │   ├── app.js           # Express app setup and middleware configuration
+│   │   ├── app.js           # Express app setup and CORS middleware configuration
 │   │   └── server.js        # Server bootstrap and DB connection
 │   ├── .env.example
 │   └── package.json
 │
 ├── frontend/
 │   ├── src/
-│   │   ├── api/             # Axios instance configured with base URL & credentials
-│   │   ├── components/      # Common UI components, protected routes, and form fields
+│   │   ├── api/             # publicApi, privateApi, interceptors, and auth.api
+│   │   ├── components/      # UI components, form fields, layout (Navbar, UserMenu), ErrorFallback
 │   │   ├── constants/       # Route paths and constants
-│   │   ├── context/         # AuthContext and AuthProvider
-│   │   ├── hooks/           # useAuth and custom useForm hooks
-│   │   ├── layouts/         # Main application layouts
-│   │   ├── pages/           # Home, Login, Register, Profile, and NotFound pages
-│   │   ├── routes/          # App router configuration
+│   │   ├── context/         # AuthContext & AuthProvider with event bus listeners
+│   │   ├── hooks/           # useAuth and custom useForm validation hooks
+│   │   ├── layouts/         # MainLayout and DashboardLayout
+│   │   ├── pages/           # Home, Login, Register, Profile, NotFound, Unauthorized, ServerError
+│   │   ├── routes/          # AppRoutes, ProtectedRoute, PublicRoute, and AppErrorBoundary
 │   │   ├── services/        # Auth API service callers
-│   │   ├── utils/           # Toast notification wrappers and error formatters
+│   │   ├── utils/           # authEvents, errorHandler, apiError, and toast wrappers
 │   │   ├── validators/      # Form validation schemas
 │   │   ├── App.jsx
 │   │   └── main.jsx
@@ -153,12 +157,13 @@ The client will be running at `http://localhost:5173`.
 | `POST` | `/api/v1/auth/login` | Login user & issue tokens | No |
 | `POST` | `/api/v1/auth/logout` | Invalidate refresh token & clear cookies | Yes |
 | `POST` | `/api/v1/auth/refresh-token` | Rotate and issue new access & refresh tokens | No (Cookie) |
-| `GET` | `/api/v1/auth/me` | Fetch current authenticated user | Yes |
+| `GET` | `/api/v1/auth/me` | Fetch current authenticated user profile | Yes |
 
 ---
 
 ## 🔒 Security Best Practices
 
+- **Dual-Instance Axios Isolation**: Public endpoints (login/register/refresh) never trigger interceptors, eliminating infinite recursion bugs.
 - **Password Hashing**: Salted hashes generated with `bcryptjs` using automatic pre-save hooks on the User schema.
 - **HTTP-Only Cookies**: Access and refresh tokens are stored in `httpOnly` cookies to protect against Cross-Site Scripting (XSS).
 - **SameSite Cookie Policies**: Set to `lax` in development and `none` (with `secure: true`) in production for cross-site cookie isolation.

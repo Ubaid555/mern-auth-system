@@ -6,12 +6,13 @@ import Home from "../pages/Home";
 import Login from "../pages/Login";
 import Register from "../pages/Register";
 import Profile from "../pages/Profile";
-import NotFound from "../pages/NotFound";
 
 import ProtectedRoute from "./ProtectedRoute";
 
 import { ROUTES } from "../constants/routes";
 import PublicRoute from "./PublicRoute";
+import DashboardLayout from "../layouts/DashboardLayout";
+import NotFoundPage from "../pages/NotFoundPage";
 
 const AppRoutes = () => {
   return (
@@ -24,11 +25,13 @@ const AppRoutes = () => {
         </Route>
 
         <Route element={<ProtectedRoute />}>
-          <Route path={ROUTES.HOME} element={<Home />} />
-          <Route path={ROUTES.PROFILE} element={<Profile />} />
+          <Route element={<DashboardLayout />}>
+            <Route path={ROUTES.HOME} element={<Home />} />
+            <Route path={ROUTES.PROFILE} element={<Profile />} />
+          </Route>
         </Route>
 
-        <Route path="*" element={<NotFound />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>
   );

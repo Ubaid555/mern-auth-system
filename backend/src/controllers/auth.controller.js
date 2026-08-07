@@ -102,7 +102,7 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
   const incomingRefreshToken = req.cookies?.refreshToken;
 
   if (!incomingRefreshToken) {
-    throw new ApiError(401, "Refresh Token is expired");
+    throw new ApiError(401, "Refresh Token is missing");
   }
 
   let decodedToken;

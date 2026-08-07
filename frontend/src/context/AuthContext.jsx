@@ -7,7 +7,9 @@ import {
   getCurrentUser,
 } from "../services/auth.service";
 
-import { ApiError } from "../utils/apiError";
+import { handleApiError } from "../utils/errorHandler";
+import { authEvents } from "../utils/authEvents";
+import { notify } from "../utils/toast";
 
 export const AuthContext = createContext();
 
@@ -19,27 +21,37 @@ export function AuthProvider({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const loadUser = async () => {
-  try {
-    const response = await getCurrentUser();
+    try {
+      const response = await getCurrentUser();
 
-    setUser(response.data);
-    setIsAuthenticated(true);
-  } catch (error) {
-    setUser(null);
-    setIsAuthenticated(false);
+      setUser(response.data);
+      setIsAuthenticated(true);
+    } catch (error) {
+      setUser(null);
+      setIsAuthenticated(false);
 
-    const apiError = new ApiError(error);
+      const apiError = handleApiError(error);
 
-    if (apiError.status !== 401) {
-      console.error(apiError);
+      if (apiError.status !== 401 && apiError.status < 500) {
+        console.error(apiError);
+      }
+    } finally {
+      setLoading(false);
     }
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   useEffect(() => {
     loadUser();
+
+    const unsubscribe = authEvents.subscribe((event) => {
+      if (event === "SESSION_EXPIRED") {
+        setUser(null);
+        setIsAuthenticated(false);
+        notify.warning("Session expired. Please sign in again.");
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const register = async (userData) => {
@@ -52,7 +64,7 @@ export function AuthProvider({ children }) {
 
       return response;
     } catch (error) {
-      throw new ApiError(error);
+      throw handleApiError(error);
     }
   };
 
@@ -66,7 +78,7 @@ export function AuthProvider({ children }) {
 
       return response;
     } catch (error) {
-      throw new ApiError(error);
+      throw handleApiError(error);
     }
   };
 
@@ -78,7 +90,7 @@ export function AuthProvider({ children }) {
 
       setIsAuthenticated(false);
     } catch (error) {
-      throw new ApiError(error);
+      throw handleApiError(error);
     }
   };
 

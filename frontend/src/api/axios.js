@@ -1,13 +1,6 @@
-import axios from "axios";
-import ENV from "../config/env";
+import publicApi from "./publicApi";
+import privateApi from "./privateApi";
 
-const api = axios.create({
-  baseURL: ENV.API_BASE_URL,
-  withCredentials: true,
-  headers: {
-    "Content-Type": "application/json",
-  },
-  timeout: 10000,
-});
+export { publicApi, privateApi };
+export default publicApi;
 
-export default api;

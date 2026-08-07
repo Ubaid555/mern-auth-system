@@ -8,22 +8,28 @@ import { AuthProvider } from "./context/AuthContext.jsx";
 
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import AppErrorBoundary from "./routes/ErrorBoundary";
+import { setupInterceptors } from "./api/interceptors";
+
+setupInterceptors();
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <BrowserRouter>
-      <AuthProvider>
-        <App />
-        <ToastContainer
-          position="top-right"
-          autoClose={3000}
-          hideProgressBar={false}
-          newestOnTop
-          closeOnClick
-          pauseOnHover
-          theme="light"
-        />
-      </AuthProvider>
+      <AppErrorBoundary>
+        <AuthProvider>
+          <App />
+          <ToastContainer
+            position="top-right"
+            autoClose={3000}
+            hideProgressBar={false}
+            newestOnTop
+            closeOnClick
+            pauseOnHover
+            theme="light"
+          />
+        </AuthProvider>
+      </AppErrorBoundary>
     </BrowserRouter>
   </StrictMode>,
 );
