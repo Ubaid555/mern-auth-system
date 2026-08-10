@@ -14,10 +14,15 @@ import PublicRoute from "./PublicRoute";
 import DashboardLayout from "../layouts/DashboardLayout";
 import NotFoundPage from "../pages/NotFoundPage";
 
+import AboutPage from "../pages/AboutPage";
+
 const AppRoutes = () => {
   return (
     <Routes>
       <Route element={<MainLayout />}>
+        {/* A globally public route that doesn't care if you are logged in or out */}
+        <Route path={ROUTES.ABOUT} element={<AboutPage />} />
+
         <Route element={<PublicRoute />}>
           <Route path={ROUTES.LOGIN} element={<Login />} />
 
