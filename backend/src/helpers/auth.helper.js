@@ -23,6 +23,7 @@ export const generateTokensAndSetCookies = async (user, res) => {
   };
 };
 
+// https://chatgpt.com/share/6aad7197-df74-83ee-a6a7-53f7295e1afd
 export const sanitizeUser = (user) => {
   return {
     _id: user._id,
