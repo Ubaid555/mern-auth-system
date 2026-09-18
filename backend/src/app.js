@@ -1,14 +1,20 @@
 import "dotenv/config";
 import express from "express";
+import helmet from "helmet";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 
 import notFound from "./middleware/notFound.js";
 import errorHandler from "./middleware/errorHandler.js";
+import ApiResponse from "./utils/ApiResponse.js";
+import ApiError from "./utils/ApiError.js";
 
 import authRoutes from "./routes/auth.routes.js";
 
 const app = express();
+
+// Security HTTP headers
+app.use(helmet());
 
 const allowedOrigins = [
   process.env.CLIENT_URL,
@@ -26,7 +32,7 @@ app.use(
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
-      return callback(new Error(`CORS error: Origin ${origin} not allowed`));
+      return callback(new ApiError(403, `CORS error: Origin ${origin} not allowed`));
     },
     credentials: true,
   })
@@ -44,13 +50,13 @@ app.use(cookieParser());
 app.use("/api/v1/auth", authRoutes);
 
 app.get("/api/health", (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: "API is running successfully 🚀",
-  });
+  res
+    .status(200)
+    .json(new ApiResponse(200, null, "API is running successfully 🚀"));
 });
 
 app.use(notFound);
+
 
 app.use(errorHandler);
 
